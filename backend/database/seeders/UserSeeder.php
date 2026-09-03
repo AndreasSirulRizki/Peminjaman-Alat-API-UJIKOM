@@ -11,7 +11,7 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Bagus Karim',
+                'name' => 'Andreas(Admin)',
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
                 'alamat' => 'Bandung, West Java',
             ],
             [
-                'name' => 'Arif Muhammad',
+                'name' => 'Dias(Petugas)',
                 'email' => 'petugas@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'petugas',
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
                 'alamat' => 'Baleendah, Bandung',
             ],
             [
-                'name' => 'Rian Setiawan',
+                'name' => 'Rian(Peminjam)',
                 'email' => 'rian@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'peminjam',
@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
                 'alamat' => 'Ciparay, Bandung',
             ],
             [
-                'name' => 'Siti Aminah',
+                'name' => 'Siti Aminah(Peminjam)',
                 'email' => 'siti@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'peminjam',
@@ -43,7 +43,7 @@ class UserSeeder extends Seeder
                 'alamat' => 'Dayeuhkolot, Bandung',
             ],
             [
-                'name' => 'Eka Pratama',
+                'name' => 'Eka Pratama(Peminjam)',
                 'email' => 'eka@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'peminjam',

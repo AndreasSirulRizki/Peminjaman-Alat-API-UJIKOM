@@ -15,11 +15,33 @@ class AlatController extends Controller
 {
     public function index(): JsonResponse
     {
-        // Tetap menggunakan eager loading untuk mencegah N+1 Query
-        $alat = Alat::with('kategori')->latest()->get();
+        $perPage = request()->input('per_page', 10);
+        $search  = request()->input('search');
+
+        $alat = Alat::with('kategori')
+            ->when($search, function ($query, $search) {
+                return $query->where('nama_alat', 'like', "%{$search}%")
+                    ->orWhere('status_kondisi', 'like', "%{$search}%")
+                    ->orWhereHas('kategori', function ($q) use ($search) {
+                        $q->where('nama_kategori', 'like', "%{$search}%");
+                    });
+            })
+            ->latest()
+            ->paginate($perPage);
+
         return response()->json([
             'message' => 'Daftar alat berhasil diambil.',
-            'data' => AlatResource::collection($alat)
+            'data'    => AlatResource::collection($alat->items()),
+            'meta'    => [
+                'current_page' => $alat->currentPage(),
+                'last_page'    => $alat->lastPage(),
+                'per_page'     => $alat->perPage(),
+                'total'        => $alat->total(),
+            ],
+            'links' => [
+                'prev' => $alat->previousPageUrl(),
+                'next' => $alat->nextPageUrl(),
+            ],
         ]);
     }
 

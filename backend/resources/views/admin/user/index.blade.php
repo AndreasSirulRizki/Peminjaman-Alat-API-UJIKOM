@@ -4,36 +4,33 @@
 @section('header-title', 'Manajemen Pengguna Sistem')
 
 @section('content')
-    <!-- Notifikasi Sukses/Gagal -->
     @if(session('success'))
-        <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg shadow-sm text-sm">
+        <div class="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
             {{ session('success') }}
         </div>
     @endif
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-        <div class="p-5 border-b border-gray-200 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h3 class="text-lg font-bold text-gray-800">Daftar Pengguna Sistem</h3>
+    <div class="bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-slate-800">
+        <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h3 class="text-lg font-bold text-white">Daftar Pengguna Sistem</h3>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
-                <!-- Form Search -->
                 <form action="{{ route('admin.user.index') }}" method="GET" class="flex w-full md:w-80">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, role..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 text-sm font-semibold rounded-r-lg transition">
+                        class="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-l-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 text-sm font-semibold rounded-r-lg transition">
                         Cari
                     </button>
                     @if(request('search'))
                         <a href="{{ route('admin.user.index') }}"
-                            class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 text-sm rounded-lg flex items-center transition" title="Reset Pencarian">
+                            class="ml-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 text-sm rounded-lg flex items-center transition border border-slate-700" title="Reset Pencarian">
                             Reset
                         </a>
                     @endif
                 </form>
 
-                <!-- Tombol Tambah User -->
                 <a href="{{ route('admin.user.create') }}"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+                    class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap shadow-lg shadow-indigo-500/20">
                     + Tambah User
                 </a>
             </div>
@@ -42,41 +39,38 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
-                        <th class="py-3 px-4 border-b">Nama</th>
-                        <th class="py-3 px-4 border-b">Email</th>
-                        <th class="py-3 px-4 border-b">Role / Hak Akses</th>
-                        <th class="py-3 px-4 border-b">No. HP</th>
-                        <th class="py-3 px-4 border-b">Aksi</th>
+                    <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="py-3 px-5 border-b border-slate-800">Nama</th>
+                        <th class="py-3 px-5 border-b border-slate-800">Email</th>
+                        <th class="py-3 px-5 border-b border-slate-800">Role / Hak Akses</th>
+                        <th class="py-3 px-5 border-b border-slate-800">No. HP</th>
+                        <th class="py-3 px-5 border-b border-slate-800">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-700 text-sm">
+                <tbody class="text-slate-300 text-sm">
                     @forelse($users as $user)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="py-3 px-4 border-b font-medium text-gray-900">{{ $user->name }}</td>
-                            <td class="py-3 px-4 border-b">{{ $user->email }}</td>
-                            <td class="py-3 px-4 border-b">
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
-                                    @if($user->role == 'admin') bg-purple-100 text-purple-800
-                                    @elseif($user->role == 'petugas') bg-blue-100 text-blue-800
-                                    @else bg-green-100 text-green-800 @endif">
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="py-3 px-5 border-b border-slate-800 font-medium text-white">{{ $user->name }}</td>
+                            <td class="py-3 px-5 border-b border-slate-800">{{ $user->email }}</td>
+                            <td class="py-3 px-5 border-b border-slate-800">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full border
+                                    @if($user->role == 'admin') bg-purple-500/10 text-purple-400 border-purple-500/20
+                                    @elseif($user->role == 'petugas') bg-blue-500/10 text-blue-400 border-blue-500/20
+                                    @else bg-emerald-500/10 text-emerald-400 border-emerald-500/20 @endif">
                                     {{ ucfirst($user->role) }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 border-b">{{ $user->no_hp ?? '-' }}</td>
-                            <td class="py-3 px-4 border-b">
+                            <td class="py-3 px-5 border-b border-slate-800 text-slate-400">{{ $user->no_hp ?? '-' }}</td>
+                            <td class="py-3 px-5 border-b border-slate-800">
                                 <div class="flex items-center space-x-2">
-                                    <!-- Tombol Edit -->
                                     <a href="{{ route('admin.user.edit', $user->id) }}"
-                                        class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition">
+                                        class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                                         Edit
                                     </a>
-
-                                    <!-- Tombol Hapus -->
                                     <form action="{{ route('admin.user.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition">
+                                        <button type="submit" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                                             Hapus
                                         </button>
                                     </form>
@@ -85,14 +79,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-4 text-center text-gray-500">Belum ada pengguna.</td>
+                            <td colspan="5" class="py-8 text-center text-slate-500">Belum ada pengguna.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="p-4 border-t border-gray-200 bg-gray-50">
+        <div class="p-4 border-t border-slate-800">
             {{ $users->links() }}
         </div>
     </div>

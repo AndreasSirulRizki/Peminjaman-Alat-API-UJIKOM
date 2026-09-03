@@ -3,6 +3,7 @@ services:
   mysql-server:
     image: mysql:8.0
     container_name: MySQL-API
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: API_ujikom
       MYSQL_USER: api_ujikom
@@ -21,6 +22,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: laravel-api
+    restart: unless-stopped
     working_dir: /var/www
     ports:
       - "8000:8000"
@@ -36,6 +38,7 @@ services:
   phpMyadmin:
     image: phpmyadmin
     container_name: PhpMyadmin-API
+    restart: unless-stopped
     environment:
       PMA_HOST: mysql-server
     ports:

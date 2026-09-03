@@ -13,7 +13,8 @@ class LogAktivitas extends Model
         'user_id', 'aktivitas'
     ];
 
-    public function user(): BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 }

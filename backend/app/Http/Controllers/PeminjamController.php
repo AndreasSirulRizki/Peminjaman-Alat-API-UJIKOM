@@ -36,11 +36,18 @@ class PeminjamController extends Controller
             ]);
 
             // Masukkan daftar alat yang dipinjam ke detail_pinjam
-            foreach ($request->alat_id as $index => $alatId) {
+            foreach ($request->alat_id as $alatId) {
+                $jumlahPinjam = $request->jumlah[$alatId] ?? 1;
+                $alat = Alat::findOrFail($alatId);
+
+                if ($alat->stok < $jumlahPinjam) {
+                    throw new \Exception("Stok alat '{$alat->nama_alat}' tidak mencukupi. Sisa stok: {$alat->stok}");
+                }
+
                 DetailPinjam::create([
                     'peminjaman_id' => $peminjaman->id,
                     'alat_id' => $alatId,
-                    'jumlah' => $request->jumlah[$index],
+                    'jumlah' => $jumlahPinjam,
                 ]);
             }
 

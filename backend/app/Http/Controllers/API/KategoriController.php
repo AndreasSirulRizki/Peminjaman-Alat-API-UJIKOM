@@ -12,10 +12,28 @@ class KategoriController extends Controller
 {
     public function index(): JsonResponse
     {
-        $kategori = Kategori::latest()->get();
+        $perPage = request()->input('per_page', 10);
+        $search  = request()->input('search');
+
+        $kategori = Kategori::when($search, function ($query, $search) {
+                return $query->where('nama_kategori', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage);
+
         return response()->json([
             'message' => 'Daftar kategori berhasil diambil.',
-            'data' => KategoriResource::collection($kategori)
+            'data'    => KategoriResource::collection($kategori->items()),
+            'meta'    => [
+                'current_page' => $kategori->currentPage(),
+                'last_page'    => $kategori->lastPage(),
+                'per_page'     => $kategori->perPage(),
+                'total'        => $kategori->total(),
+            ],
+            'links' => [
+                'prev' => $kategori->previousPageUrl(),
+                'next' => $kategori->nextPageUrl(),
+            ],
         ]);
     }
 

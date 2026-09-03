@@ -15,7 +15,7 @@ class PengembalianSeeder extends Seeder
                 'tgl_kembali' => '2026-06-04',
                 'kondisi_kembali' => 'Lengkap dan Berfungsi Baik',
                 'denda' => 0,
-                'petugas_id' => 2, // Arif (Petugas)
+                'petugas_id' => 2, // Dias (Petugas)
             ],
             [
                 'peminjaman_id' => 2,
