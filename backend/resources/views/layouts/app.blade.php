@@ -167,13 +167,6 @@
                         <i class="fas fa-undo-alt w-5 text-center"></i> Kelola Pengembalian
                     </a>
 
-                    <!-- Laporan Peminjaman -->
-                    <a href="{{ route('admin.laporan.index') }}"
-                       class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                              {{ request()->routeIs('admin.laporan*') ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                        <i class="fas fa-file-alt w-5 text-center"></i> Laporan
-                    </a>
-
                 @elseif(auth()->user()->role == 'petugas')
 
                     <!-- ========================================================== -->

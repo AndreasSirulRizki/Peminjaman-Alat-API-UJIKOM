@@ -10,6 +10,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-slate-800">
         <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
             <h3 class="text-lg font-bold text-white">Daftar Alat</h3>
@@ -40,6 +46,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="py-3 px-5 border-b border-slate-800 w-20">Foto</th>
                         <th class="py-3 px-5 border-b border-slate-800">Nama Alat</th>
                         <th class="py-3 px-5 border-b border-slate-800">Kategori</th>
                         <th class="py-3 px-5 border-b border-slate-800">Stok</th>
@@ -50,6 +57,19 @@
                 <tbody class="text-slate-300 text-sm">
                     @forelse($alats as $alat)
                         <tr class="hover:bg-slate-800/40 transition">
+                            {{-- Kolom Foto --}}
+                            <td class="py-3 px-5 border-b border-slate-800">
+                                @if($alat->gambar)
+                                    <img src="{{ asset('foto/' . $alat->gambar) }}"
+                                         alt="{{ $alat->nama_alat }}"
+                                         class="w-12 h-12 object-cover rounded-lg border border-slate-700"
+                                         onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%228%22 fill=%22%231e293b%22 stroke=%22%23334155%22 stroke-width=%221%22/%3E%3Ctext x=%2224%22 y=%2228%22 text-anchor=%22middle%22 font-size=%229%22 fill=%22%2364748b%22 font-family=%22sans-serif%22%3ENo Foto%3C/text%3E%3C/svg%3E';">
+                                @else
+                                    <div class="w-12 h-12 bg-slate-800 rounded-lg border border-slate-700 flex items-center justify-center" title="Tidak ada foto">
+                                        <i class="fas fa-image text-slate-500 text-sm"></i>
+                                    </div>
+                                @endif
+                            </td>
                             <td class="py-3 px-5 border-b border-slate-800 font-medium text-white">{{ $alat->nama_alat }}</td>
                             <td class="py-3 px-5 border-b border-slate-800">{{ $alat->kategori->nama_kategori ?? '-' }}</td>
                             <td class="py-3 px-5 border-b border-slate-800">
@@ -78,7 +98,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center text-slate-500">Belum ada data alat.</td>
+                            <td colspan="6" class="py-8 text-center text-slate-500">Belum ada data alat.</td>
                         </tr>
                     @endforelse
                 </tbody>

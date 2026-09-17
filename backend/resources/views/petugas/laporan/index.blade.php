@@ -17,7 +17,7 @@
         <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tanggal Awal</label>
             <input type="date" name="tanggal_awal"
-                   value="{{ $tanggalAwal }}"
+                   value="{{ $tanggalAwal ? \Carbon\Carbon::parse($tanggalAwal)->format('Y-m-d') : '' }}"
                    class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white
                           placeholder-slate-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
         </div>
@@ -25,7 +25,7 @@
         <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tanggal Akhir</label>
             <input type="date" name="tanggal_akhir"
-                   value="{{ $tanggalAkhir }}"
+                   value="{{ $tanggalAkhir ? \Carbon\Carbon::parse($tanggalAkhir)->format('Y-m-d') : '' }}"
                    class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white
                           placeholder-slate-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
         </div>

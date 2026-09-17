@@ -59,11 +59,23 @@
                                 {{ $peminjaman->user->name ?? 'User Dihapus' }}
                             </td>
                             <td class="py-3 px-5 border-b border-slate-800">
-                                <ul class="space-y-1">
+                                <ul class="space-y-2">
                                     @foreach($peminjaman->detailPinjam as $detail)
                                         <li class="flex items-center gap-2">
-                                            <span class="font-semibold text-slate-200">{{ $detail->alat->nama_alat ?? 'Alat Dihapus' }}</span>
-                                            <span class="text-xs bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">{{ $detail->jumlah }} pcs</span>
+                                            @if($detail->alat && $detail->alat->gambar)
+                                                <img src="{{ asset('foto/' . $detail->alat->gambar) }}"
+                                                     alt="{{ $detail->alat->nama_alat }}"
+                                                     class="w-9 h-9 object-cover rounded-md border border-slate-700 flex-shrink-0"
+                                                     onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 rx=%226%22 fill=%22%231e293b%22 stroke=%22%23334155%22/%3E%3C/svg%3E';">
+                                            @else
+                                                <div class="w-9 h-9 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-image text-slate-600 text-xs"></i>
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <span class="font-semibold text-slate-200">{{ $detail->alat->nama_alat ?? 'Alat Dihapus' }}</span>
+                                                <span class="text-xs bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 ml-1">{{ $detail->jumlah }} pcs</span>
+                                            </div>
                                         </li>
                                     @endforeach
                                 </ul>

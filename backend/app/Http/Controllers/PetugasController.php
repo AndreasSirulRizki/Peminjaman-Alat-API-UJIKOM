@@ -47,24 +47,44 @@ class PetugasController extends Controller
         }
     }
 
-    // ========== MENOLAK PEMINJAMAN (HAPUS DATA) ==========
-    public function tolakPeminjaman($id)
+    // ========== MENOLAK PEMINJAMAN (DENGAN ALASAN) ==========
+    public function tolakPeminjaman(Request $request, $id)
     {
+        $request->validate([
+            'alasan_tolak' => 'required|string|min:5|max:500',
+        ], [
+            'alasan_tolak.required' => 'Alasan penolakan wajib diisi.',
+            'alasan_tolak.min'      => 'Alasan penolakan minimal 5 karakter.',
+            'alasan_tolak.max'      => 'Alasan penolakan maksimal 500 karakter.',
+        ]);
+
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($id);
 
             if ($peminjaman->status !== 'diajukan') {
+                DB::rollBack();
                 return redirect()->back()->with('error', 'Peminjaman ini sudah diproses, tidak bisa dibatalkan.');
             }
 
+            // Simpan alasan ke tabel peminjaman sebelum dihapus
+            // (jika ingin tetap bisa dilihat di riwayat, ubah menjadi update status saja)
+            $peminjaman->update(['alasan_tolak' => $request->alasan_tolak]);
+
+            // Catat ke log aktivitas agar ada jejak audit
+            \App\Models\LogAktivitas::create([
+                'user_id'    => auth()->id(),
+                'aktivitas'  => "Menolak peminjaman ID #{$peminjaman->id} atas nama {$peminjaman->user->name}. Alasan: {$request->alasan_tolak}",
+            ]);
+
+            // Hapus detail pinjaman dulu (anak), baru induk
             $peminjaman->detailPinjam()->delete();
             $peminjaman->delete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Pengajuan peminjaman berhasil ditolak dan dihapus.');
+            return redirect()->back()->with('success', 'Pengajuan peminjaman berhasil ditolak.');
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -143,7 +163,11 @@ class PetugasController extends Controller
 
         $peminjaman = Peminjaman::with(['user', 'detailPinjam.alat'])
             ->when($tanggalAwal && $tanggalAkhir, function ($query) use ($tanggalAwal, $tanggalAkhir) {
-                return $query->whereBetween('tgl_pinjam', [$tanggalAwal, $tanggalAkhir]);
+                // Tambah jam agar mencakup seluruh hari (pagi s/d malam)
+                return $query->whereBetween('tgl_pinjam', [
+                    $tanggalAwal . ' 00:00:00',
+                    $tanggalAkhir . ' 23:59:59',
+                ]);
             })
             ->when($status && in_array($status, $validStatus), function ($query) use ($status) {
                 return $query->where('status', $status);

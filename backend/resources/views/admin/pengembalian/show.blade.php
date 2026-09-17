@@ -63,12 +63,24 @@
 
     <hr class="my-4 border-slate-700/50">
 
-    <h4 class="font-semibold mb-2 text-sm text-slate-300">Detail Alat yang Dikembalikan</h4>
-    <ul class="list-disc list-inside space-y-1 text-sm text-slate-300">
+    <h4 class="font-semibold mb-3 text-sm text-slate-300">Detail Alat yang Dikembalikan</h4>
+    <ul class="space-y-3">
         @foreach($pengembalian->peminjaman->detailPinjam as $detail)
-            <li>
-                <span class="font-semibold text-white">{{ $detail->alat->nama_alat ?? 'Alat Dihapus' }}</span>
-                - {{ $detail->jumlah }} pcs
+            <li class="flex items-center gap-3 bg-slate-800/50 rounded-lg px-3 py-2 border border-slate-700/50">
+                @if($detail->alat && $detail->alat->gambar)
+                    <img src="{{ asset('foto/' . $detail->alat->gambar) }}"
+                         alt="{{ $detail->alat->nama_alat }}"
+                         class="w-12 h-12 object-cover rounded-lg border border-slate-700 flex-shrink-0"
+                         onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%228%22 fill=%22%231e293b%22 stroke=%22%23334155%22/%3E%3C/svg%3E';">
+                @else
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg border border-slate-700 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-image text-slate-600"></i>
+                    </div>
+                @endif
+                <div>
+                    <span class="font-semibold text-white block">{{ $detail->alat->nama_alat ?? 'Alat Dihapus' }}</span>
+                    <span class="text-xs text-slate-400">{{ $detail->jumlah }} pcs</span>
+                </div>
             </li>
         @endforeach
     </ul>

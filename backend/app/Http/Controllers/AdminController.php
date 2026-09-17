@@ -19,7 +19,15 @@ class AdminController extends Controller
     public function index()
     {
         $logs = LogAktivitas::with('user')->latest()->take(10)->get();
-        return view('admin.dashboard', compact('logs'));
+
+        $stats = [
+            'total_alat'       => Alat::count(),
+            'sedang_dipinjam'  => Peminjaman::where('status', 'dipinjam')->count(),
+            'pending_request'  => Peminjaman::where('status', 'diajukan')->count(),
+            'total_user'       => User::count(),
+        ];
+
+        return view('admin.dashboard', compact('logs', 'stats'));
     }
 
     // ======================== CRUD ALAT ========================
@@ -51,15 +59,32 @@ class AdminController extends Controller
     public function storeAlat(Request $request)
     {
         $request->validate([
-            'kategori_id' => 'required',
-            'nama_alat' => 'required|string|max:255',
-            'stok' => 'required|integer',
-            'status_kondisi' => 'required|string',
+            'kategori_id'    => 'required|exists:kategori,id',
+            'nama_alat'      => 'required|string|max:255|unique:alat,nama_alat',
+            'stok'           => 'required|integer|min:0',
+            'status_kondisi' => 'required|string|max:100',
+            'deskripsi'      => 'nullable|string',
+            'gambar'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        Alat::create($request->only(['kategori_id', 'nama_alat', 'stok', 'status_kondisi', 'deskripsi', 'gambar']));
+        $namaFile = null;
 
-        return redirect()->back()->with('success', 'Alat berhasil ditambahkan.');
+        if ($request->hasFile('gambar')) {
+            $file      = $request->file('gambar');
+            $namaFile  = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $namaFile);
+        }
+
+        Alat::create([
+            'kategori_id'    => $request->kategori_id,
+            'nama_alat'      => $request->nama_alat,
+            'stok'           => $request->stok,
+            'status_kondisi' => $request->status_kondisi,
+            'deskripsi'      => $request->deskripsi,
+            'gambar'         => $namaFile,
+        ]);
+
+        return redirect()->route('admin.alat.index')->with('success', 'Alat berhasil ditambahkan.');
     }
 
     public function editAlat($id)
@@ -74,13 +99,33 @@ class AdminController extends Controller
         $alat = Alat::findOrFail($id);
 
         $request->validate([
-            'kategori_id' => 'required',
-            'nama_alat' => 'required|string|max:255',
-            'stok' => 'required|integer',
-            'status_kondisi' => 'required|string',
+            'kategori_id'    => 'required|exists:kategori,id',
+            'nama_alat'      => 'required|string|max:255|unique:alat,nama_alat,' . $id,
+            'stok'           => 'required|integer|min:0',
+            'status_kondisi' => 'required|string|max:100',
+            'deskripsi'      => 'nullable|string',
+            'gambar'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $alat->update($request->all());
+        $data = $request->only(['kategori_id', 'nama_alat', 'stok', 'status_kondisi', 'deskripsi']);
+
+        if ($request->hasFile('gambar')) {
+            // Hapus file lama jika ada
+            if ($alat->gambar) {
+                $pathLama = public_path('foto/' . $alat->gambar);
+                if (file_exists($pathLama)) {
+                    unlink($pathLama);
+                }
+            }
+
+            // Simpan file baru
+            $file             = $request->file('gambar');
+            $namaFile         = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $namaFile);
+            $data['gambar']   = $namaFile;
+        }
+
+        $alat->update($data);
 
         return redirect()->route('admin.alat.index')->with('success', 'Alat berhasil diperbarui.');
     }
@@ -88,6 +133,27 @@ class AdminController extends Controller
     public function destroyAlat($id)
     {
         $alat = Alat::findOrFail($id);
+
+        // Cek apakah alat sedang dipinjam (status 'dipinjam' atau 'telat')
+        $sedangDipinjam = \App\Models\DetailPinjam::where('alat_id', $id)
+            ->whereHas('peminjaman', function ($query) {
+                $query->whereIn('status', ['dipinjam', 'telat']);
+            })
+            ->exists();
+
+        if ($sedangDipinjam) {
+            return redirect()->route('admin.alat.index')
+                ->with('error', 'Alat tidak dapat dihapus karena sedang dipinjam oleh user.');
+        }
+
+        // Hapus file gambar dari disk jika ada
+        if ($alat->gambar) {
+            $pathGambar = public_path('foto/' . $alat->gambar);
+            if (file_exists($pathGambar)) {
+                unlink($pathGambar);
+            }
+        }
+
         $alat->delete();
 
         return redirect()->route('admin.alat.index')->with('success', 'Alat berhasil dihapus.');
@@ -304,13 +370,29 @@ class AdminController extends Controller
     public function storePeminjaman(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tgl_pinjam' => 'required|date',
+            'user_id'          => 'required|exists:users,id',
+            'tgl_pinjam'       => 'required|date',
             'tgl_kembali_plan' => 'required|date|after_or_equal:tgl_pinjam',
-            'alat_id' => 'required|array',
-            'alat_id.*' => 'exists:alat,id',
-            'jumlah' => 'required|array',
-            'jumlah.*' => 'integer|min:1',
+            'alat_id'          => 'required|array|min:1',
+            'alat_id.*'        => 'required|exists:alat,id',
+            'jumlah'           => 'required|array|min:1',
+            'jumlah.*'         => 'required|integer|min:1',
+        ], [
+            'user_id.required'              => 'Peminjam wajib dipilih.',
+            'user_id.exists'                => 'Peminjam yang dipilih tidak valid.',
+            'tgl_pinjam.required'           => 'Tanggal pinjam wajib diisi.',
+            'tgl_pinjam.date'               => 'Format tanggal pinjam tidak valid.',
+            'tgl_kembali_plan.required'     => 'Rencana tanggal kembali wajib diisi.',
+            'tgl_kembali_plan.date'         => 'Format rencana tanggal kembali tidak valid.',
+            'tgl_kembali_plan.after_or_equal' => 'Tanggal rencana kembali harus setelah atau sama dengan tanggal pinjam.',
+            'alat_id.required'              => 'Pilih minimal 1 alat untuk dipinjam.',
+            'alat_id.min'                   => 'Pilih minimal 1 alat untuk dipinjam.',
+            'alat_id.*.required'            => 'Alat wajib dipilih pada setiap baris.',
+            'alat_id.*.exists'              => 'Alat yang dipilih tidak valid.',
+            'jumlah.required'               => 'Jumlah alat wajib diisi.',
+            'jumlah.*.required'             => 'Jumlah barang wajib diisi.',
+            'jumlah.*.integer'              => 'Jumlah barang harus berupa angka.',
+            'jumlah.*.min'                  => 'Jumlah minimal 1 barang.',
         ]);
 
         DB::beginTransaction();

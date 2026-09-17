@@ -16,7 +16,7 @@ class AlatSeeder extends Seeder
                 'stok' => 15,
                 'status_kondisi' => 'Baik',
                 'deskripsi' => 'Router nirkabel rumahan yang cocok untuk praktik jaringan dasar.',
-                'gambar' => 'mikrotik_rb941.jpg',
+                'gambar' => 'Router Mikrotik RB941-2nD.jpg',
             ],
             [
                 'kategori_id' => 2,
@@ -24,7 +24,7 @@ class AlatSeeder extends Seeder
                 'stok' => 5,
                 'status_kondisi' => 'Baik',
                 'deskripsi' => 'Kamera pemula untuk kebutuhan dokumentasi dan pembuatan aset media.',
-                'gambar' => 'canon_3000d.jpg',
+                'gambar' => 'Kamera DSLR Canon EOS 3000D.jpg',
             ],
             [
                 'kategori_id' => 3,
@@ -32,7 +32,7 @@ class AlatSeeder extends Seeder
                 'stok' => 8,
                 'status_kondisi' => 'Baik',
                 'deskripsi' => 'Perangkat komputasi ringkas untuk server lokal skala kecil.',
-                'gambar' => 'intel_nuc.jpg',
+                'gambar' => 'MIni PC.jpg',
             ],
             [
                 'kategori_id' => 4,
@@ -40,7 +40,7 @@ class AlatSeeder extends Seeder
                 'stok' => 20,
                 'status_kondisi' => 'Baik',
                 'deskripsi' => 'Alat potong dan pasang konektor kabel UTP.',
-                'gambar' => 'crimping_proskit.jpg',
+                'gambar' => 'Tang.jpg',
             ],
             [
                 'kategori_id' => 5,
@@ -48,7 +48,15 @@ class AlatSeeder extends Seeder
                 'stok' => 25,
                 'status_kondisi' => 'Baik',
                 'deskripsi' => 'Konverter display untuk menyambungkan perangkat modern ke proyektor lama.',
-                'gambar' => 'hdmi_vga.jpg',
+                'gambar' => 'ADAPTER HDMI TO VGA support VGA 1080p with audio.jpg',
+            ],
+            [
+                'kategori_id' => 2,
+                'nama_alat' => 'Iphone 11 Pro Max',
+                'stok' => 3,
+                'status_kondisi' => 'Baik',
+                'deskripsi' => 'Smartphone Apple dengan kamera triple lens untuk kebutuhan fotografi dan dokumentasi.',
+                'gambar' => 'Iphone 11 pro max.jpg',
             ],
         ];
 

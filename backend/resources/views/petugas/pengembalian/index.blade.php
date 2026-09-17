@@ -42,12 +42,23 @@
 
                             {{-- Alat & Jumlah --}}
                             <td class="py-3 px-5">
-                                <ul class="list-disc pl-4 space-y-1">
+                                <ul class="space-y-2">
                                     @foreach($item->detailPinjam as $detail)
-                                        <li>
-                                            {{ $detail->alat->nama_alat ?? 'Alat dihapus' }}
-                                            <span class="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">
-                                                {{ $detail->jumlah }} pcs
+                                        <li class="flex items-center gap-2">
+                                            @if($detail->alat && $detail->alat->gambar)
+                                                <img src="{{ asset('foto/' . $detail->alat->gambar) }}"
+                                                     alt="{{ $detail->alat->nama_alat }}"
+                                                     class="w-9 h-9 object-cover rounded-md border border-slate-700 flex-shrink-0"
+                                                     onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect width=%2236%22 height=%2236%22 rx=%226%22 fill=%22%231e293b%22 stroke=%22%23334155%22/%3E%3C/svg%3E';">
+                                            @else
+                                                <div class="w-9 h-9 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-image text-slate-600 text-xs"></i>
+                                                </div>
+                                            @endif
+                                            <span class="text-slate-300">{{ $detail->alat->nama_alat ?? 'Alat dihapus' }}
+                                                <span class="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-300 ml-1">
+                                                    {{ $detail->jumlah }} pcs
+                                                </span>
                                             </span>
                                         </li>
                                     @endforeach

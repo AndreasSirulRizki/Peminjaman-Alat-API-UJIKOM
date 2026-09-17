@@ -12,7 +12,7 @@ class Peminjaman extends Model
     protected $table = 'peminjaman';
 
     protected $fillable = [
-        'user_id', 'tgl_pinjam', 'tgl_kembali_plan', 'status'
+        'user_id', 'tgl_pinjam', 'tgl_kembali_plan', 'status', 'alasan_tolak',
     ];
 
     protected function casts(): array {

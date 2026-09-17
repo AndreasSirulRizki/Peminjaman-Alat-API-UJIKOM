@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="max-w-xl bg-slate-900 rounded-xl shadow-sm border border-slate-800 p-6">
-    <form action="{{ route('admin.alat.store') }}" method="POST">
+    <form action="{{ route('admin.alat.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-4">
@@ -22,6 +22,7 @@
             <label class="block text-slate-300 text-sm font-medium mb-2">Nama Alat</label>
             <input type="text" name="nama_alat" value="{{ old('nama_alat') }}" required
                 class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            @error('nama_alat') <span class="text-rose-400 text-xs">{{ $message }}</span> @enderror
         </div>
 
         <div class="mb-4">
@@ -42,6 +43,25 @@
                 class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ old('deskripsi') }}</textarea>
         </div>
 
+        <div class="mb-6">
+            <label class="block text-slate-300 text-sm font-medium mb-2">
+                Foto Alat
+                <span class="text-xs text-slate-500 font-normal">(JPG, PNG — maks 2MB, opsional)</span>
+            </label>
+            <input type="file" name="gambar" id="gambar-create" accept="image/*"
+                class="block w-full text-sm text-slate-400
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-lg file:border-0
+                       file:text-sm file:font-semibold
+                       file:bg-slate-700 file:text-slate-300
+                       hover:file:bg-slate-600 cursor-pointer
+                       bg-slate-800 border border-slate-700 rounded-lg"
+                onchange="previewGambar(this, 'preview-create')">
+            <div id="preview-create" class="mt-3 hidden">
+                <img src="" alt="Preview" class="w-24 h-24 object-cover rounded-lg border border-slate-700">
+            </div>
+        </div>
+
         <div class="flex justify-end space-x-2">
             <a href="{{ route('admin.alat.index') }}"
                 class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Batal</a>
@@ -49,4 +69,19 @@
         </div>
     </form>
 </div>
+
+<script>
+function previewGambar(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const img = preview.querySelector('img');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 @endsection
