@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\LogAktivitas;
 use App\Models\Peminjaman;
 use App\Models\DetailPinjam;
-use App\Models\Pengembalian; // <-- TAMBAHAN BARU
+use App\Models\Pengembalian; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;

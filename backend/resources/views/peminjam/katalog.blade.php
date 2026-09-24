@@ -356,17 +356,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         empty.classList.add('hidden');
-        list.innerHTML = items.map(item => `
-            <div class="flex items-center justify-between bg-slate-800/60 border border-slate-700/50
+        list.innerHTML = items.map(item => {
+            const invalid = item.jumlah < 1;
+            const over    = item.jumlah > item.maxStok;
+            const warn    = invalid || over;
+            const warnMsg = invalid
+                ? `<i class="fas fa-exclamation-triangle mr-1"></i>Minimal pinjam 1!`
+                : over
+                    ? `<i class="fas fa-exclamation-triangle mr-1"></i>Melebihi stok! Maks: ${item.maxStok} unit`
+                    : `Maks. stok: ${item.maxStok} unit`;
+            return `
+            <div class="flex items-center justify-between bg-slate-800/60 border ${warn ? 'border-rose-500/50' : 'border-slate-700/50'}
                         rounded-xl px-4 py-3 gap-3">
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-white truncate">${escHtml(item.nama)}</p>
-                    <p class="text-xs text-slate-500 mt-0.5">Maks. stok: ${item.maxStok} unit</p>
+                    <p class="text-xs mt-0.5 ${warn ? 'text-rose-400 font-medium' : 'text-slate-500'}">${warnMsg}</p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <button type="button" onclick="stepKeranjang(${item.id}, -1)"
                             class="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition">−</button>
-                    <span class="text-white font-bold text-sm w-6 text-center">${item.jumlah}</span>
+                    <span class="font-bold text-sm w-8 text-center ${warn ? 'text-rose-400' : 'text-white'}">${item.jumlah}</span>
                     <button type="button" onclick="stepKeranjang(${item.id}, 1)"
                             class="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition">+</button>
                 </div>
@@ -374,8 +383,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         class="text-slate-500 hover:text-rose-400 transition ml-1 flex-shrink-0">
                     <i class="fas fa-times text-sm"></i>
                 </button>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     /* ─────────────────────────────────────────────
@@ -384,34 +393,66 @@ document.addEventListener('DOMContentLoaded', function () {
     window.tambahKeKeranjang = function (id, nama, maxStok) {
         if (keranjang[id]) return; // sudah ada
         keranjang[id] = { id, nama, jumlah: 1, maxStok };
+        clearFormError();
         refresh();
     };
 
     window.hapusDariKeranjang = function (id) {
         delete keranjang[id];
+        clearFormError();
         refresh();
     };
 
     window.stepKeranjang = function (id, step) {
         if (!keranjang[id]) return;
         const next = keranjang[id].jumlah + step;
+        // Tombol minus: hapus dari keranjang kalau sudah di 1
         if (next < 1) { hapusDariKeranjang(id); return; }
-        if (next > keranjang[id].maxStok) return;
+        // Tombol +: TIDAK dicegah melebihi stok — biar user sadar, server yang reject
         keranjang[id].jumlah = next;
-        // sync input di card jika tampil
         const qtyInput = document.getElementById('qty-' + id);
         if (qtyInput) qtyInput.value = next;
+        clearFormError();
+        updateQtyWarning(id);
         renderRingkasan();
     };
 
     window.setQty = function (id, val) {
         if (!keranjang[id]) return;
-        const v = Math.max(1, Math.min(parseInt(val) || 1, keranjang[id].maxStok));
+        // TIDAK clamp sama sekali — biarkan nilai apa adanya (termasuk minus/nol)
+        // Server yang akan menolak via validasi manual loop
+        const parsed = parseInt(val);
+        const v = isNaN(parsed) ? 0 : parsed;
         keranjang[id].jumlah = v;
         const qtyInput = document.getElementById('qty-' + id);
         if (qtyInput) qtyInput.value = v;
+        clearFormError();
+        updateQtyWarning(id);
         renderRingkasan();
     };
+
+    // Tampilkan warning visual merah di input kalau nilai tidak valid
+    function updateQtyWarning(id) {
+        const qtyInput = document.getElementById('qty-' + id);
+        if (!qtyInput || !keranjang[id]) return;
+        const item = keranjang[id];
+        const invalid = item.jumlah < 1;
+        const over    = item.jumlah > item.maxStok;
+
+        if (invalid) {
+            qtyInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+            qtyInput.classList.remove('border-slate-600');
+            qtyInput.title = 'Minimal pinjam 1!';
+        } else if (over) {
+            qtyInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+            qtyInput.classList.remove('border-slate-600');
+            qtyInput.title = 'Melebihi stok! Maks: ' + item.maxStok;
+        } else {
+            qtyInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+            qtyInput.classList.add('border-slate-600');
+            qtyInput.title = '';
+        }
+    }
 
     function refresh() {
         renderGrid(currentAlats);
@@ -457,16 +498,36 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     /* ─────────────────────────────────────────────
-       FORM SUBMIT — inject hidden inputs
+       FORM SUBMIT — validasi + inject hidden inputs
     ───────────────────────────────────────────── */
     window.handleSubmit = function (e) {
         const items = Object.values(keranjang);
+
+        // 1. Minimal 1 alat harus dipilih
         if (!items.length) {
-            alert('Pilih minimal 1 alat terlebih dahulu.');
             e.preventDefault();
+            showFormError('Pilih minimal 1 alat terlebih dahulu.');
             return false;
         }
 
+        // 2. Validasi client-side sebelum kirim ke server
+        for (const item of items) {
+            if (!item.jumlah || item.jumlah < 1) {
+                e.preventDefault();
+                showFormError('Minimal pinjam barang 1 untuk alat "' + item.nama + '".');
+                return false;
+            }
+            if (item.jumlah > item.maxStok) {
+                e.preventDefault();
+                showFormError(
+                    'Stok alat "' + item.nama + '" tidak mencukupi. ' +
+                    'Jumlah diminta: ' + item.jumlah + ', sisa stok: ' + item.maxStok + '.'
+                );
+                return false;
+            }
+        }
+
+        // 3. Semua valid → inject hidden inputs
         const container = document.getElementById('hidden-inputs');
         container.innerHTML = items.map(item => `
             <input type="hidden" name="alat_id[]" value="${item.id}">
@@ -475,6 +536,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return true;
     };
+
+    /* ─────────────────────────────────────────────
+       HELPER — tampilkan error inline di atas form
+    ───────────────────────────────────────────── */
+    function showFormError(msg) {
+        // Cari atau buat blok error JS
+        let errBox = document.getElementById('js-form-error');
+        if (!errBox) {
+            errBox = document.createElement('div');
+            errBox.id = 'js-form-error';
+            errBox.className =
+                'mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 ' +
+                'p-4 rounded-xl text-sm flex items-start gap-2';
+            // Sisipkan sebelum panel ringkasan
+            const panel = document.getElementById('ringkasan-panel');
+            panel.parentNode.insertBefore(errBox, panel);
+        }
+        errBox.innerHTML =
+            '<i class="fas fa-exclamation-circle mt-0.5 flex-shrink-0"></i>' +
+            '<span>' + escHtml(msg) + '</span>';
+        errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Hapus error JS saat user mengubah keranjang
+    function clearFormError() {
+        const errBox = document.getElementById('js-form-error');
+        if (errBox) errBox.remove();
+    }
 
     /* ─────────────────────────────────────────────
        SCROLL KE RINGKASAN

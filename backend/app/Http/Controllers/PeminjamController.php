@@ -49,43 +49,93 @@ class PeminjamController extends Controller
 
     public function ajukanPeminjaman(Request $request)
     {
+        // ── Validasi struktur dasar ────────────────────────────────────────────
         $request->validate([
-            'tgl_kembali_plan' => 'required|date|after:today',
-            'alat_id' => 'required|array',
-            'jumlah' => 'required|array',
+            'tgl_kembali_plan' => 'required|date|after_or_equal:today',
+            'alat_id'          => 'required|array|min:1',
+            'alat_id.*'        => 'exists:alat,id',
+            'jumlah'           => 'required|array|min:1',
+        ], [
+            'alat_id.required'                => 'Pilih minimal 1 alat untuk dipinjam.',
+            'alat_id.min'                     => 'Pilih minimal 1 alat untuk dipinjam.',
+            'alat_id.*.exists'                => 'Salah satu alat yang dipilih tidak valid.',
+            'tgl_kembali_plan.required'       => 'Tanggal rencana kembali wajib diisi.',
+            'tgl_kembali_plan.after_or_equal' => 'Tanggal rencana kembali tidak boleh di masa lalu.',
         ]);
 
+        // ── Validasi jumlah per alat secara manual ─────────────────────────────
+        // Catatan: form mengirim jumlah[{alat_id}] (key = id alat, bukan index 0,1,2),
+        // sehingga rule wildcard 'jumlah.*' => 'min:1' TIDAK dieksekusi Laravel.
+        // Kita validasi manual di sini agar tetap tertangkap sebelum masuk transaksi.
+        $errors = [];
+        foreach ($request->alat_id as $alatId) {
+            $val = $request->input("jumlah.{$alatId}");
+
+            if (is_null($val) || $val === '') {
+                $errors[] = 'Jumlah barang wajib diisi.';
+                break;
+            }
+
+            if (!ctype_digit((string) $val) && !(is_numeric($val) && (int)$val == $val)) {
+                $errors[] = 'Jumlah barang harus berupa angka bulat.';
+                break;
+            }
+
+            if ((int) $val < 1) {
+                $errors[] = 'Minimal pinjam barang 1.';
+                break;
+            }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->back()
+                ->withErrors($errors)
+                ->withInput();
+        }
+
+        // ── Validasi stok per alat + simpan dalam satu transaksi ──────────────
         DB::beginTransaction();
         try {
             // Buat header peminjaman
             $peminjaman = Peminjaman::create([
-                'user_id' => auth()->id(),
-                'tgl_pinjam' => now(),
+                'user_id'          => auth()->id(),
+                'tgl_pinjam'       => now(),
                 'tgl_kembali_plan' => $request->tgl_kembali_plan,
-                'status' => 'diajukan',
+                'status'           => 'diajukan',
             ]);
 
             // Masukkan daftar alat yang dipinjam ke detail_pinjam
             foreach ($request->alat_id as $alatId) {
-                $jumlahPinjam = $request->jumlah[$alatId] ?? 1;
-                $alat = Alat::findOrFail($alatId);
+                $jumlahPinjam = (int) $request->input("jumlah.{$alatId}");
 
-                if ($alat->stok < $jumlahPinjam) {
-                    throw new \Exception("Stok alat '{$alat->nama_alat}' tidak mencukupi. Sisa stok: {$alat->stok}");
+                // Kunci baris agar tidak ada race condition saat stok dicek
+                $alat = Alat::lockForUpdate()->findOrFail($alatId);
+
+                if ($jumlahPinjam > $alat->stok) {
+                    throw new \Exception(
+                        "Stok alat '{$alat->nama_alat}' tidak mencukupi. " .
+                        "Jumlah diminta: {$jumlahPinjam}, sisa stok: {$alat->stok}."
+                    );
                 }
 
                 DetailPinjam::create([
                     'peminjaman_id' => $peminjaman->id,
-                    'alat_id' => $alatId,
-                    'jumlah' => $jumlahPinjam,
+                    'alat_id'       => $alatId,
+                    'jumlah'        => $jumlahPinjam,
                 ]);
             }
 
             DB::commit();
-            return redirect()->route('peminjam.riwayat')->with('success', 'Pengajuan peminjaman berhasil dikirim.');
+            return redirect()
+                ->route('peminjam.riwayat')
+                ->with('success', 'Pengajuan peminjaman berhasil dikirim.');
+
         } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()->with('error', 'Gagal mengajukan peminjaman: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()
+                ->back()
+                ->withErrors([$e->getMessage()])
+                ->withInput();
         }
     }
 

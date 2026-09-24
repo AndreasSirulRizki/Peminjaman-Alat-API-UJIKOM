@@ -27,6 +27,43 @@
         </div>
     @endif
 
+    {{-- ===== FORM FILTER STATUS ===== --}}
+    <form method="GET" action="{{ route('petugas.peminjaman.index') }}"
+          class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end">
+
+        <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Status</label>
+            <select name="status"
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white
+                           focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                <option value=""            {{ !$status ? 'selected' : '' }}>Semua Status</option>
+                <option value="diajukan"    {{ $status == 'diajukan'    ? 'selected' : '' }}>Diajukan</option>
+                <option value="dipinjam"    {{ $status == 'dipinjam'    ? 'selected' : '' }}>Dipinjam</option>
+                <option value="telat"       {{ $status == 'telat'       ? 'selected' : '' }}>Telat</option>
+                <option value="dikembalikan"{{ $status == 'dikembalikan'? 'selected' : '' }}>Dikembalikan</option>
+            </select>
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                <i class="fas fa-filter mr-1.5"></i> Terapkan Filter
+            </button>
+            <a href="{{ route('petugas.peminjaman.index') }}"
+               class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-semibold px-4 py-2 rounded-lg transition">
+                <i class="fas fa-times mr-1.5"></i> Reset
+            </a>
+        </div>
+
+        {{-- Indikator filter aktif --}}
+        @if($status)
+            <p class="text-xs text-slate-500 self-end pb-2">
+                Menampilkan: <span class="text-indigo-400 font-medium">{{ ucfirst($status) }}</span>
+                &nbsp;·&nbsp; {{ $peminjamans->count() }} data
+            </p>
+        @endif
+    </form>
+
     <h3 class="text-lg font-bold text-white mb-4">Daftar Pengajuan & Transaksi Peminjaman</h3>
 
     <div class="bg-slate-900 rounded-xl shadow-sm border border-slate-800 overflow-hidden">

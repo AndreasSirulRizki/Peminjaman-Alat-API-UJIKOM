@@ -230,8 +230,9 @@ Route::middleware(['auth', 'role:petugas,admin'])->prefix('petugas')->name('petu
     // ===== PANTAU PENGEMBALIAN & LAPORAN =====
     Route::get('/pengembalian', [PetugasController::class, 'indexPengembalian'])->name('pengembalian.index');
     
-    // Route Laporan (HAPUS /petugas di depannya)
+    // Route Laporan
     Route::get('/laporan', [PetugasController::class, 'laporan'])->name('laporan');
+    Route::post('/laporan/cetak', [PetugasController::class, 'cetakLaporan'])->name('laporan.cetak');
 
     // Pengembalian & Denda
     Route::post('/pengembalian/{id}', [PetugasController::class, 'prosesPengembalian'])->name('pengembalian.proses');
