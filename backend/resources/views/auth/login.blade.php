@@ -132,6 +132,22 @@
                 </button>
 
             </form>
+
+            {{-- Divider --}}
+            <div class="flex items-center gap-3 my-5">
+                <div class="flex-1 h-px bg-slate-700/60"></div>
+                <span class="text-xs text-slate-500">atau</span>
+                <div class="flex-1 h-px bg-slate-700/60"></div>
+            </div>
+
+            {{-- Link ke Register --}}
+            <p class="text-center text-sm text-slate-400">
+                Belum punya akun?
+                <a href="{{ route('register') }}" class="text-indigo-400 hover:text-indigo-300 font-medium transition">
+                    Daftar di sini
+                </a>
+            </p>
+
         </div>
 
         {{-- ===== FOOTER ===== --}}

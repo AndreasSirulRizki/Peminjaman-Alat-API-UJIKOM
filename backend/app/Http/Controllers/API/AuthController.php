@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+// NOTE: Hash::make() tidak dipakai di create() karena User model sudah punya cast 'hashed' pada password
 
 class AuthController extends Controller
 {
@@ -18,12 +19,12 @@ class AuthController extends Controller
         try {
             $user = DB::transaction(function () use ($request) {
                 return User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                    'role' => 'peminjam',
-                    'no_hp' => $request->no_hp,
-                    'alamat' => $request->alamat,
+                    'name'     => $request->name,
+                    'email'    => $request->email,
+                    'password' => $request->password, // plain text — model cast 'hashed' otomatis hash
+                    'role'     => 'peminjam',
+                    'no_hp'    => $request->no_hp,
+                    'alamat'   => $request->alamat,
                 ]);
             });
 

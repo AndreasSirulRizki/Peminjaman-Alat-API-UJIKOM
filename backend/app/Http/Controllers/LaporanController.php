@@ -17,19 +17,7 @@ class LaporanController extends Controller
         return view('admin.laporan.index');
     }
 
-    /**
-     * Generate PDF berdasarkan filter tanggal dan status.
-     *
-     * Bug sebelumnya:
-     * 1. Filter tanggal hanya aktif jika KEDUANYA (start & end) diisi.
-     * 2. whereBetween di SQLite kadang tidak konsisten dengan kolom yang di-cast Carbon.
-     * 3. Variabel tanggal dikirim ke view sebagai string mentah, bisa null.
-     *
-     * Perbaikan:
-     * - Filter start_date dan end_date diproses secara INDEPENDEN dengan whereDate().
-     * - Tanggal dikonversi ke Carbon agar format tampilan di PDF konsisten.
-     * - Validasi menggunakan $request->validate() agar redirect otomatis dengan error.
-     */
+    
     public function generatePDF(Request $request)
     {
         // Validasi — jika gagal otomatis redirect back + withErrors + withInput

@@ -15,12 +15,18 @@ services:
       - API-UJIKOM
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-papi_ujikom"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # 2. SERVER BACKEND (LARAVEL)
   app-laravel:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: laravel-api
     restart: unless-stopped
     working_dir: /var/www
@@ -28,9 +34,17 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/var/www
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    # Tunggu MySQL sehat dulu, lalu install deps, generate key, migrate, baru serve
+    command: >
+      sh -c "
+        composer install --no-interaction --prefer-dist --optimize-autoloader &&
+        php artisan key:generate --no-interaction &&
+        php artisan migrate --force --no-interaction &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
     networks:
       - API-UJIKOM
 
@@ -54,3 +68,5 @@ volumes:
 networks:
   API-UJIKOM:
     driver: bridge
+
+
